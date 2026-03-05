@@ -1,2 +1,4 @@
 # Ignore the local virtual environment
 venv/
+models/
+preprocessed/
