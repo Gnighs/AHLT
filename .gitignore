@@ -1,2 +1,2 @@
 # Ignore the local virtual environment
-.venv/
+venv/

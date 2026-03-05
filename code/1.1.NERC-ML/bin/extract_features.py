@@ -43,6 +43,11 @@ def extract_sentence_features(tokens, dicts) :
       if found:
           for c in val : tokenFeatures.append("externalpart="+c)
 
+      # NEW FEATURES FOR CURRENT WORD BEGIN HERE
+
+      tokenFeatures.append("POS=" + tk.pos_)
+      tokenFeatures.append("shape=" + tk.shape_)
+
       if i>0 :
          tPrev = tokens[i-1].text
          tokenFeatures.append("formPrev="+tPrev)
@@ -60,6 +65,12 @@ def extract_sentence_features(tokens, dicts) :
          found,val = dicts.find(tPrev.lower(), 'externalpart')
          if found:
              for c in val : tokenFeatures.append("externalpartPrev="+c)
+
+
+         # NEW FEATURES FOR PREVIOUS WORD BEGIN HERE
+
+         tokenFeatures.append("POSPrev=" + tokens[i-1].pos_)
+
       else :
          tokenFeatures.append("BoS")
 
@@ -80,6 +91,11 @@ def extract_sentence_features(tokens, dicts) :
          found,val = dicts.find(tNext.lower(), 'externalpart')
          if found:
             for c in val : tokenFeatures.append("externalpartNext="+c)
+
+         # NEW FEATURES FOR NEXT WORD BEGIN HERE
+
+         tokenFeatures.append("POSNext=" + tokens[i+1].pos_)
+
       else:
          tokenFeatures.append("EoS")
     
@@ -100,7 +116,7 @@ def extract_features(datafile, outfile) :
     outf = open(outfile, "w")
     
     # create analyzer. We don't need the parser now, it will be faster if disabled
-    nlp = spacy.load("en_core_web_trf", enable=["tokenizer"])
+    nlp = spacy.load("en_core_web_trf")
     
     # parse XML file, obtaining a DOM tree
     tree = parse(datafile)
