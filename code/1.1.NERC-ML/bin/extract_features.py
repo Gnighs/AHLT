@@ -8,6 +8,14 @@ import spacy
 import paths
 from dictionaries import Dictionaries
 
+import nltk
+from nltk.corpus import stopwords
+
+nltk.download('stopwords')
+
+stopwords_eng = stopwords.words('english')
+
+
 ## --------- get tag ----------- 
 ##  Find out whether given token is marked as part of an entity in the XML
 def get_label(tks, tke, spans) :
@@ -15,93 +23,81 @@ def get_label(tks, tke, spans) :
         if tks==spanS and tke<=spanE+1 : return "B-"+spanT
         elif tks>spanS and tke<=spanE+1 : return "I-"+spanT
     return "O"
- 
+
+# t: token
+# tokenFeatures: feature list
+# i: current token position
+# dist: distance to current token. Is Prev if negative, Next if positive, current if 0
+
+def features_by_pos(tokens, tokenFeatures, i, dist, dicts):
+   # Calculate the target index
+   idx = i + dist
+
+   if idx < 0 or idx >= len(tokens):
+     return 
+
+   # Get the token text
+   tk_text = tokens[idx].text
+
+   if dist > 0:
+     suffix = f"Next{dist}"
+   elif dist < 0:
+     suffix = f"Prev{abs(dist)}"
+   else:
+     suffix = "" # Current token gets no suffix
+
+   tokenFeatures.append(f"form{suffix}={tk_text}")
+   tokenFeatures.append(f"formlower{suffix}={tk_text.lower()}")
+   tokenFeatures.append(f"suf3{suffix}={tk_text[-3:]}")
+   tokenFeatures.append(f"suf4{suffix}={tk_text[-4:]}")
+   tokenFeatures.append(f"POS{suffix}={tokens[idx].pos_}")
+   tokenFeatures.append(f"shape{suffix}={tokens[idx].shape}")
+
+   if tk_text.isupper(): tokenFeatures.append(f"isUpper{suffix}")
+   if tk_text.istitle(): tokenFeatures.append(f"isTitle{suffix}")
+   if tk_text.isdigit(): tokenFeatures.append(f"isDigit{suffix}")
+   if tk_text.isalpha(): tokenFeatures.append(f"isAlpha{suffix}")
+   
+   if tk_text in stopwords_eng: tokenFeatures.append(f"isStopWord{suffix}")
+
+   if '-' in tk_text: tokenFeatures.append(f"hasDash{suffix}")
+   if re.search('[0-9]', tk_text): tokenFeatures.append(f"hasDigit{suffix}")
+
+   found, val = dicts.find(tk_text.lower(), 'external')
+   if found:
+     for c in val: tokenFeatures.append(f"external{suffix}={c}")
+     
+   found, val = dicts.find(tk_text.lower(), 'externalpart')
+   if found:
+     for c in val: tokenFeatures.append(f"externalpart{suffix}={c}")
+
+
+
+
+
+
 ## --------- Feature extractor ----------- 
 ## -- Extract features for each token in given sentence
-
-def extract_sentence_features(tokens, dicts) :
-
-   # for each token, generate list of features and add it to the result
-   sentenceFeatures = {}
-   for i,tk in enumerate(tokens) :
-      tokenFeatures = []
-      t = tk.text
-
-      tokenFeatures.append("form="+t)
-      tokenFeatures.append("formlower="+t.lower())
-      tokenFeatures.append("suf3="+t[-3:])
-      tokenFeatures.append("suf4="+t[-4:])
-      if t.isupper() : tokenFeatures.append("isUpper")
-      if t.istitle() : tokenFeatures.append("isTitle")
-      if t.isdigit() : tokenFeatures.append("isDigit")
-      if '-' in t : tokenFeatures.append("hasDash")
-      if re.search('[0-9]',t) : tokenFeatures.append("hasDigit")
-      found,val = dicts.find(t.lower(), 'external')
-      if found:
-         for c in val : tokenFeatures.append("external="+c)
-      found,val = dicts.find(t.lower(), 'externalpart')
-      if found:
-          for c in val : tokenFeatures.append("externalpart="+c)
-
-      # NEW FEATURES FOR CURRENT WORD BEGIN HERE
-
-      tokenFeatures.append("POS=" + tk.pos_)
-      tokenFeatures.append("shape=" + tk.shape_)
-
-      if i>0 :
-         tPrev = tokens[i-1].text
-         tokenFeatures.append("formPrev="+tPrev)
-         tokenFeatures.append("formlowerPrev="+tPrev.lower())
-         tokenFeatures.append("suf3Prev="+tPrev[-3:])
-         tokenFeatures.append("suf4Prev="+tPrev[-4:])
-         if tPrev.isupper() : tokenFeatures.append("isUpperPrev")
-         if tPrev.istitle() : tokenFeatures.append("isTitlePrev")
-         if tPrev.isdigit() : tokenFeatures.append("isDigitPrev")
-         if '-' in tPrev : tokenFeatures.append("hasDashPrev")
-         if re.search('[0-9]',tPrev) : tokenFeatures.append("hasDigitPrev")
-         found,val = dicts.find(tPrev.lower(), 'external')
-         if found:
-             for c in val : tokenFeatures.append("externalPrev="+c)
-         found,val = dicts.find(tPrev.lower(), 'externalpart')
-         if found:
-             for c in val : tokenFeatures.append("externalpartPrev="+c)
-
-
-         # NEW FEATURES FOR PREVIOUS WORD BEGIN HERE
-
-         tokenFeatures.append("POSPrev=" + tokens[i-1].pos_)
-
-      else :
-         tokenFeatures.append("BoS")
-
-      if i<len(tokens)-1 :
-         tNext = tokens[i+1].text
-         tokenFeatures.append("formNext="+tNext)
-         tokenFeatures.append("formlowerNext="+tNext.lower())
-         tokenFeatures.append("suf3Next="+tNext[-3:])
-         tokenFeatures.append("suf4Next="+tNext[-4:])
-         if tNext.isupper() : tokenFeatures.append("isUpperNext")
-         if tNext.istitle() : tokenFeatures.append("isTitleNext")
-         if tNext.isdigit() : tokenFeatures.append("isDigitNext")
-         if '-' in tNext : tokenFeatures.append("hasDashNext")
-         if re.search('[0-9]',tNext) : tokenFeatures.append("hasDigitNext")
-         found,val = dicts.find(tNext.lower(), 'external')
-         if found:
-            for c in val : tokenFeatures.append("externalNext="+c)
-         found,val = dicts.find(tNext.lower(), 'externalpart')
-         if found:
-            for c in val : tokenFeatures.append("externalpartNext="+c)
-
-         # NEW FEATURES FOR NEXT WORD BEGIN HERE
-
-         tokenFeatures.append("POSNext=" + tokens[i+1].pos_)
-
-      else:
-         tokenFeatures.append("EoS")
+def extract_sentence_features(tokens, dicts):
+    sentenceFeatures = {}
     
-      sentenceFeatures[i] = tokenFeatures
-    
-   return sentenceFeatures
+    for i, tk in enumerate(tokens):
+        tokenFeatures = []
+
+        # Loop through a window of -2 to +2
+        for j in range(-2, 3):
+            # Pass tokens, feature list, index, distance, and dicts
+            features_by_pos(tokens, tokenFeatures, i, j, dicts)
+
+        # Add Beginning/End of Sentence markers
+        if i == 0:
+            tokenFeatures.append("BoS")
+        elif i == len(tokens) - 1: # Fixed this to dynamically check the last token
+            tokenFeatures.append("EoS")
+
+        sentenceFeatures[i] = tokenFeatures
+        
+    return sentenceFeatures
 
 ## --------- Feature extractor ----------- 
 ## -- Extract features for each token in each
