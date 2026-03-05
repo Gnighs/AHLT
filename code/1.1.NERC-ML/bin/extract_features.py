@@ -57,7 +57,7 @@ def features_by_pos(tokens, tokenFeatures, i, dist, dicts):
    if tk_text.istitle(): tokenFeatures.append(f"isTitle{suffix}")
    if tk_text.isdigit(): tokenFeatures.append(f"isDigit{suffix}")
    if tk_text.isalpha(): tokenFeatures.append(f"isAlpha{suffix}")
-   
+
    if tk_text in stopwords_eng: tokenFeatures.append(f"isStopWord{suffix}")
 
    if '-' in tk_text: tokenFeatures.append(f"hasDash{suffix}")
@@ -70,9 +70,6 @@ def features_by_pos(tokens, tokenFeatures, i, dist, dicts):
    found, val = dicts.find(tk_text.lower(), 'externalpart')
    if found:
      for c in val: tokenFeatures.append(f"externalpart{suffix}={c}")
-
-
-
 
 
 
