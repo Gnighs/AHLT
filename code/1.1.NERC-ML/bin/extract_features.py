@@ -16,6 +16,13 @@ nltk.download('stopwords')
 stopwords_eng = stopwords.words('english')
 
 
+CHEM_PREFIXES = {'nor','des','dex','iso','neo','oxo','oxy',
+                 'pro','sul','tri','ben','eth','meth','prop'}
+CHEM_SUFFIXES = {'ine','ide','ate','ase','ium','one','ene',
+                 'ole','ane','cin','zol','pam','lol','pril',
+                 'mab','tin','vir','xan','fen','zan'}
+
+
 ## --------- get tag ----------- 
 ##  Find out whether given token is marked as part of an entity in the XML
 def get_label(tks, tke, spans) :
@@ -48,17 +55,28 @@ def features_by_pos(tokens, tokenFeatures, i, dist, dicts):
 
    tokenFeatures.append(f"form{suffix}={tk_text}")
    tokenFeatures.append(f"formlower{suffix}={tk_text.lower()}")
+   tokenFeatures.append(f"suf2{suffix}={tk_text[-2:]}")
    tokenFeatures.append(f"suf3{suffix}={tk_text[-3:]}")
    tokenFeatures.append(f"suf4{suffix}={tk_text[-4:]}")
+   #tokenFeatures.append(f"suf5{suffix}={tk_text[-5:]}")
+   #tokenFeatures.append(f"suf6{suffix}={tk_text[-6:]}")
+
+   tokenFeatures.append(f"pref2{suffix}={tk_text[:2]}")
+   #tokenFeatures.append(f"pref3{suffix}={tk_text[:3]}")
+   #tokenFeatures.append(f"pref4{suffix}={tk_text[:4]}")
+
    tokenFeatures.append(f"POS{suffix}={tokens[idx].pos_}")
    tokenFeatures.append(f"shape{suffix}={tokens[idx].shape}")
+   #tokenFeatures.append(f"lemma{suffix}={tokens[idx].lemma_}")
 
    if tk_text.isupper(): tokenFeatures.append(f"isUpper{suffix}")
    if tk_text.istitle(): tokenFeatures.append(f"isTitle{suffix}")
    if tk_text.isdigit(): tokenFeatures.append(f"isDigit{suffix}")
-   if tk_text.isalpha(): tokenFeatures.append(f"isAlpha{suffix}")
 
-   if tk_text in stopwords_eng: tokenFeatures.append(f"isStopWord{suffix}")
+   #tokenFeatures.append(f"dep{suffix}={tokens[idx].dep_}")
+   #tokenFeatures.append(f"headForm{suffix}={tokens[idx].head.text.lower()}")
+
+   #if tk_text in stopwords_eng: tokenFeatures.append(f"isStopWord{suffix}")
 
    if '-' in tk_text: tokenFeatures.append(f"hasDash{suffix}")
    if re.search('[0-9]', tk_text): tokenFeatures.append(f"hasDigit{suffix}")
@@ -73,28 +91,40 @@ def features_by_pos(tokens, tokenFeatures, i, dist, dicts):
 
 
 
+   if tk_text[:3].lower() in CHEM_PREFIXES:
+       tokenFeatures.append(f"chemPrefix{suffix}")
+   if tk_text[-3:].lower() in CHEM_SUFFIXES:
+       tokenFeatures.append(f"chemSuffix{suffix}")
+
+
+
 ## --------- Feature extractor ----------- 
 ## -- Extract features for each token in given sentence
 def extract_sentence_features(tokens, dicts):
-    sentenceFeatures = {}
+   sentenceFeatures = {}
     
-    for i, tk in enumerate(tokens):
-        tokenFeatures = []
+   for i, tk in enumerate(tokens):
+      tokenFeatures = []
 
-        # Loop through a window of -2 to +2
-        for j in range(-2, 3):
-            # Pass tokens, feature list, index, distance, and dicts
-            features_by_pos(tokens, tokenFeatures, i, j, dicts)
+      # Loop through a window of -2 to +2
+      for j in range(-2, 3):
+         # Pass tokens, feature list, index, distance, and dicts
+         features_by_pos(tokens, tokenFeatures, i, j, dicts)
 
-        # Add Beginning/End of Sentence markers
-        if i == 0:
-            tokenFeatures.append("BoS")
-        elif i == len(tokens) - 1: # Fixed this to dynamically check the last token
-            tokenFeatures.append("EoS")
+      # Add Beginning/End of Sentence markers
+      if i == 0:
+         tokenFeatures.append("BoS")
+      elif i == len(tokens) - 1: # Fixed this to dynamically check the last token
+         tokenFeatures.append("EoS")
 
-        sentenceFeatures[i] = tokenFeatures
+      if i > 0 and tokens[i-1].text == '(':
+         tokenFeatures.append("afterOpenParen")
+      if i < len(tokens)-1 and tokens[i+1].text == ')':
+         tokenFeatures.append("beforeCloseParen")
+
+      sentenceFeatures[i] = tokenFeatures
         
-    return sentenceFeatures
+   return sentenceFeatures
 
 ## --------- Feature extractor ----------- 
 ## -- Extract features for each token in each

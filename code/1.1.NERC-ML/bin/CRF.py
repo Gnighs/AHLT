@@ -26,7 +26,7 @@ class CRF:
             # extract parameters if provided. Use default if not
             alg = params['algorithm'] if 'algorithm' in params else 'lbfgs'
             minf = int(params['feature.minfreq']) if 'feature.minfreq' in params else 1
-            maxit =  int(params['max_iterations']) if 'max_iterations' in params else 9999999
+            maxit =  int(params['max_iterations']) if 'max_iterations' in params else 750
             c1 = float(params['c1']) if 'c1' in params else 0.1
             c2 = float(params['c2']) if 'c2' in params else 1.0
             eps = float(params['epsilon']) if 'epsilon' in params else 0.00001
