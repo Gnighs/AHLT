@@ -16,9 +16,9 @@ class nercLSTM(nn.Module):
       n_feat = codes.get_n_features()
       n_labels = codes.get_n_labels()
 
-      embLWsize = 100  
-      embWsize = 100  
-      embSsize = 50  
+      embLWsize = 25
+      embWsize = 25
+      embSsize = 12
       self.embLW = nn.Embedding(n_lc_words, embLWsize)
       self.embW = nn.Embedding(n_words, embWsize)
       self.embS = nn.Embedding(n_sufs, embSsize)
