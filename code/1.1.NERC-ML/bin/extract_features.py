@@ -11,22 +11,25 @@ from dictionaries import Dictionaries
 import nltk
 from nltk.corpus import stopwords
 
-nltk.download('stopwords')
-
-stopwords_eng = stopwords.words('english')
-
 
 CHEM_PREFIXES = {'nor','des','dex','iso','neo','oxo','oxy',
-                 'pro','sul','tri','ben','eth','meth','prop'}
+                 'pro','sul','tri','ben','eth','meth','prop',
+                 'cef','cep','flu','ami','car','clo',
+                 'phe','rif','ver','hal'}
 
 CHEM_SUFFIXES = {'ine','ide','ate','ase','ium','one','ene',
                  'ole','ane','cin','zol','pam','lol','pril',
-                 'mab','tin','vir','xan','fen','zan'}
+                 'mab','tin','vir','xan','fen','zan',
+                 'oxin','pine','line','mine','azine','idine',
+                 'oxine','tocin','barbital','floxacin','lukast','dipine'}
 
-DRUGN_SUFFIXES = {'atin', 'idin', 'osin', 'asin', 'itol'}
+DRUGN_SUFFIXES = {'atin', 'idin', 'osin', 'asin', 'itol',
+                  'esin', 'thane', 'statin', 'tropin',
+                  'toxin', 'amine', 'idine'}
 
-GROUP_SUFFIXES = {'ones', 'oids', 'ines', 'ants', 'tics', 'ives', 
-                  'ants', 'ents', 'ases', 'oles', 'anes'}
+GROUP_SUFFIXES = {'ones', 'oids', 'ines', 'ants', 'tics', 'ives',
+                  'ents', 'ases', 'oles', 'anes', 'kers',
+                  'sants', 'nics', 'zines', 'nols', 'xants'}
 
 
 ## --------- get tag ----------- 
@@ -81,6 +84,9 @@ def features_by_pos(tokens, tokenFeatures, i, dist, dicts):
    tokenFeatures.append(f"dep{suffix}={tokens[idx].dep_}")
    tokenFeatures.append(f"headForm{suffix}={tokens[idx].head.text.lower()}")
 
+   #if re.match(r'^([A-Z][a-z]?\d*(\+|-)?)+$', tk_text):
+      #tokenFeatures.append(f"isChemFormula{suffix}")
+
    #if tk_text in stopwords_eng: tokenFeatures.append(f"isStopWord{suffix}")
 
    if '-' in tk_text: tokenFeatures.append(f"hasDash{suffix}")
@@ -92,6 +98,10 @@ def features_by_pos(tokens, tokenFeatures, i, dist, dicts):
    found, val = dicts.find(tk_text.lower(), 'externalpart')
    if found:
      for c in val: tokenFeatures.append(f"externalpart{suffix}={c}")
+
+
+   tokenFeatures.append(f"spaCyNER{suffix}={tokens[idx].ent_type_}")
+   tokenFeatures.append(f"spaCyIOB{suffix}={tokens[idx].ent_iob_}")
 
 
 ## --------- Feature extractor ----------- 
@@ -120,20 +130,26 @@ def extract_sentence_features(tokens, dicts):
 
       if tk.text[:3].lower() in CHEM_PREFIXES:
          tokenFeatures.append(f"chemPrefix")
-      if tk.text[-3:].lower() in CHEM_SUFFIXES:
-         tokenFeatures.append(f"chemSuffix")
 
-      if tk.text[-4:].lower() in DRUGN_SUFFIXES:
-         tokenFeatures.append("drugNSuffix")
+      if any(tk.text.lower().endswith(s) for s in CHEM_SUFFIXES):
+          tokenFeatures.append("chemSuffix")
 
-      if tk.text[-4:].lower() in GROUP_SUFFIXES:
-         tokenFeatures.append("groupSuffix")
+      if any(tk.text.lower().endswith(s) for s in DRUGN_SUFFIXES):
+          tokenFeatures.append("drugNSuffix")
 
+      if any(tk.text.lower().endswith(s) for s in GROUP_SUFFIXES):
+          tokenFeatures.append("groupSuffix")
+
+      #if tk.text.isupper() and len(tk.text) <= 4:
+      #   tokenFeatures.append("shortAcronym")
 
       if i > 0 and tk.text.istitle() and tokens[i-1].text.istitle():
          tokenFeatures.append("consecutiveTitleCase")
       if i < len(tokens)-1 and tk.text.istitle() and tokens[i+1].text.istitle():
          tokenFeatures.append("nextIsTitleCase")
+
+      #if tk.text.endswith('s') and not tk.text.endswith('ss'):
+      #   tokenFeatures.append("likelyPlural")
 
       if tk.text.isdigit(): tokenFeatures.append(f"isDigit")
       if re.search('[0-9]', tk.text): tokenFeatures.append(f"hasDigit")
@@ -155,8 +171,7 @@ def extract_features(datafile, outfile) :
     outf = open(outfile, "w")
     
     # create analyzer. We don't need the parser now, it will be faster if disabled
-    nlp = spacy.load("en_core_web_trf")
-    
+    nlp = spacy.load("en_core_web_trf", disable=["lemmatizer"])    
     # parse XML file, obtaining a DOM tree
     tree = parse(datafile)
 
