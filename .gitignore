@@ -1,4 +1,4 @@
-# Ignore the local virtual environment
-venv/
-models/
+.venv
+pau_venv
+__pycache__/
 preprocessed/
