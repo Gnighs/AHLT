@@ -1,0 +1,23 @@
+c1=0.01   c2=0.2   iter=100    macro=  68.6  micro=  86.8 ← best
+c1=0.01   c2=0.2   iter=200    macro=  68.7  micro=  86.8 ← best
+c1=0.01   c2=0.5   iter=100    macro=  68.8  micro=  86.9 ← best
+c1=0.01   c2=0.5   iter=200    macro=  68.9  micro=  87.1 ← best
+c1=0.01   c2=1.0   iter=100    macro=  69.0  micro=  87.2 ← best
+c1=0.01   c2=1.0   iter=200    macro=  69.0  micro=  87.2
+c1=0.05   c2=0.2   iter=100    macro=  68.5  micro=  86.7
+c1=0.05   c2=0.2   iter=200    macro=  68.5  micro=  86.6
+c1=0.05   c2=0.5   iter=100    macro=  68.7  micro=  86.9
+c1=0.05   c2=0.5   iter=200    macro=  68.8  micro=  86.9
+c1=0.05   c2=1.0   iter=100    macro=  68.7  micro=  86.9
+c1=0.05   c2=1.0   iter=200    macro=  68.8  micro=  87.0
+c1=0.1    c2=0.2   iter=100    macro=  68.7  micro=  86.9
+c1=0.1    c2=0.2   iter=200    macro=  68.6  micro=  86.7
+c1=0.1    c2=0.5   iter=100    macro=  68.6  micro=  86.8
+c1=0.1    c2=0.5   iter=200    macro=  68.6  micro=  86.7
+c1=0.1    c2=1.0   iter=100    macro=  68.7  micro=  86.9
+c1=0.1    c2=1.0   iter=200    macro=  68.7  micro=  86.9
+
+=======================================================
+Best macro F1 : 69.0%
+Best params   : {'c1': 0.01, 'c2': 1.0, 'max_iterations': 100}
+=======================================================
