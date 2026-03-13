@@ -52,6 +52,21 @@ for p in sys.argv[1:]:
         
 if "name" not in params: params["name"]="mymodel_000"
 
+hyperparams = {
+    'embLWsize': 25,
+    'embWsize': 25,
+    'embSsize': 12,
+    'dropout': 0.1,
+    'lstm_out_size': 200,
+    'lstm_num_layers': 1,
+    'linear_out_size': 200,
+    'activation':'relu'#,
+    #'max_len': 150,
+    #'suf_len': 5,
+    #'batch_size': 16,
+    #'epochs': 10
+}
+
 # if feature extraction is required, do it
 if "parse" in sys.argv[1:] :
     # if test is required, extract features from test
@@ -80,7 +95,7 @@ if "train" in sys.argv[1:] :
     print(f"Training model {params['name']} ...")
     do_train(os.path.join(NERDIR, "preprocessed","train.pck"),
              os.path.join(NERDIR, "preprocessed","devel.pck"),
-             params,
+             params | hyperparams,
              os.path.join(NERDIR,"models",params["name"]))
     
 if "predict" in sys.argv[1:] :    

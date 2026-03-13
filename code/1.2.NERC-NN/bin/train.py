@@ -106,7 +106,7 @@ def do_train(trainfile, valfile, params, modelname) :
     val_loader = encode_dataset(valdata, codes, params)
 
     # build network
-    network = nercLSTM(codes)
+    network = nercLSTM(codes, params)
 
     summary(network)
 
